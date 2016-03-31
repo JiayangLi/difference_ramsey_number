@@ -15,9 +15,8 @@ uint32_t ColorSet::search(uint32_t new_diff) {
 	uint32_t p = 0, q = 0;
 
 	//========== debugging print statements ==============
-	//cout << "Trying to add: " << new_diff << endl;
-	cout << "Coloring " << new_diff << " red in: ";
-	this->pprint();
+	//cout << "Coloring " << new_diff << " red in: ";
+	//this->pprint();
 	//====================================================
 
 	// try coloring new_diff red
@@ -30,8 +29,8 @@ uint32_t ColorSet::search(uint32_t new_diff) {
 	red.pop_back();
 
 	//========== debugging print statements ==============
-	cout << "Coloring " << new_diff << " blue in: ";
-	this->pprint();
+	//cout << "Coloring " << new_diff << " blue in: ";
+	//this->pprint();
 	//====================================================
 
 	// try coloring new_diff blue
@@ -122,7 +121,7 @@ inline bool avoids_para(const int_vec_t& color_set, const int_set_t& set, uint32
 				break;
 			else
 				successor(subset, n, size);
-		} 
+		}
 	}
 
 	return no_clique;
@@ -135,7 +134,6 @@ inline bool clique_exists_para(const int_vec_t& color_set, const int_set_t& set,
 	for (uint32_t i = 1; i <= k; i++) {
 		for (uint32_t j = i+1; j <= k; j++) {
 			if (set.find(color_set[subset[j]]-color_set[subset[i]]) == set.end()) {
-				//cout << (set.find(color_set[subset[j]]-color_set[subset[i]]) == set.end()) << endl;
 				return false;
 			}
 		}
@@ -151,7 +149,6 @@ inline bool clique_exists_seq(const int_vec_t& color_set, const int_set_t& set, 
 	for (uint32_t i = 0; i < k; i++) {
 		for (uint32_t j = i+1; j < k; j++) {
 			if (set.find(subset[j]-subset[i]) == set.end()) {
-				//cout << (set.find(subset[j]-subset[i]) == set.end()) << endl;
 				return false;
 			}
 		}
@@ -167,8 +164,8 @@ inline uint32_t nchoosek(uint32_t n, uint32_t k) {
 		k = l;
 
 	uint32_t numerator = 1, denominator = 1;
-	for (uint32_t i = 1; i < k+1; i++) {
-		numerator *= n-k+i;
+	for (uint32_t i = 1; i <= k; i++) {
+		numerator *= (n-k+i);
 		denominator *= i;
 	}
 	return numerator/denominator;
@@ -236,10 +233,32 @@ inline bool avoids_seq(uint32_t k, const int_vec_t& color_set, const int_set_t& 
 
 //==============================================================
 //====================== main function =========================
-int main() {
+int main(int argc, char *argv[]) {
+	uint32_t k, l;
+
+	if (argc != 3) {
+		cerr << "Usage: ramsey k1 k2" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	try {
+		k = stoi(argv[1]);
+		l = stoi(argv[2]);
+	} catch (invalid_argument& e) {
+		cerr << "Usage: ramsey k1 k2" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	// set the number of threads for checking if 
+	// a monochromatic clique is avoided
+	omp_set_num_threads(12);
+
+	cout << k << "  " << l << endl;
+
 	int_vec_t red, blue;
 	red.push_back(1);
-	ColorSet cs (red, blue, 4, 7);
-
-	cout << cs.search(2) << endl; 
+	ColorSet cs (red, blue, k, l);
+	cout << "Result for starting from {1}, {}: " << cs.search(2) << endl; 
+	
+	return 0;
 }

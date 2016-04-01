@@ -1,9 +1,12 @@
+//==============================================================
 // Find 2-color difference ramsey number
 // Jiayang Li
 // Spring 2016
+//==============================================================
 
 #include "ColorSet.h"
-//==============================================================
+
+Combination cmb;
 
 ColorSet::ColorSet(int_vec_t& init_red, int_vec_t& init_blue, uint32_t k, uint32_t l)
 	: k(k-1), l(l-1), red(move(init_red)), blue(move(init_blue)) {
@@ -15,7 +18,7 @@ uint32_t ColorSet::search(uint32_t new_diff) {
 	uint32_t p = 0, q = 0;
 
 	//========== debugging print statements ==============
-	//cout << "Coloring " << new_diff << " red in: ";
+	//std::cout << "Coloring " << new_diff << " red in: ";
 	//this->pprint();
 	//====================================================
 
@@ -29,7 +32,7 @@ uint32_t ColorSet::search(uint32_t new_diff) {
 	red.pop_back();
 
 	//========== debugging print statements ==============
-	//cout << "Coloring " << new_diff << " blue in: ";
+	//std::cout << "Coloring " << new_diff << " blue in: ";
 	//this->pprint();
 	//====================================================
 
@@ -46,11 +49,11 @@ uint32_t ColorSet::search(uint32_t new_diff) {
 }
 
 void ColorSet::pprint() {
-	cout << "red: ";
+	std::cout << "red: ";
 	print_color_set(red);
-	cout << ", blue: ";
+	std::cout << ", blue: ";
 	print_color_set(blue);
-	cout << endl;
+	std::cout << std::endl;
 }
 
 
@@ -63,11 +66,11 @@ inline void init_set(const int_vec_t& v, int_set_t& s) {
 }
 
 inline void print_color_set(const int_vec_t& color_set) {
-	cout << "{";
+	std::cout << "{";
 	for (int_vec_t::const_iterator iter = color_set.begin(); iter != color_set.end(); iter++) {
-		cout << " " << *iter;
+		std::cout << " " << *iter;
 	}
-	cout << " }";
+	std::cout << " }";
 }
 
 inline bool avoids(const int_vec_t& color_set, const int_set_t& set, uint32_t size) {
@@ -78,7 +81,8 @@ inline bool avoids(const int_vec_t& color_set, const int_set_t& set, uint32_t si
 		return true;
 	}
 
-	uint32_t num_combs = nchoosek(n, size);
+	//uint32_t num_combs = nchoosek(n, size);
+	bm::uint1024_t num_combs = cmb.getCombination(n, size);
 
 	// n too small, use sequential version
 	if (num_combs < THRESHOLD) {
@@ -89,7 +93,7 @@ inline bool avoids(const int_vec_t& color_set, const int_set_t& set, uint32_t si
 	}
 }
 
-inline bool avoids_para(const int_vec_t& color_set, const int_set_t& set, uint32_t size, uint32_t n, uint32_t num_combs) {
+inline bool avoids_para(const int_vec_t& color_set, const int_set_t& set, uint32_t size, uint32_t n, bm::uint1024_t num_combs) {
 	bool no_clique = true;
 
 	#pragma omp parallel default(shared)
@@ -98,7 +102,8 @@ inline bool avoids_para(const int_vec_t& color_set, const int_set_t& set, uint32
 		subset[0] = n;				// for eaiser comb generation
 		subset[size+1] = n;			
 
-		uint32_t id, num_threads, chunk, start, end;
+		uint32_t id, num_threads;
+		bm::uint1024_t chunk, start, end;
 
 		// evenly spread subsets across different threads
 		id = omp_get_thread_num();
@@ -171,15 +176,15 @@ inline uint32_t nchoosek(uint32_t n, uint32_t k) {
 	return numerator/denominator;
 }
 
-inline void unrank(uint32_t *t, uint32_t r, uint32_t n, uint32_t k) {
+inline void unrank(uint32_t *t, bm::uint1024_t r, uint32_t n, uint32_t k) {
 	// Using minimal change order
 	uint32_t x = n;
 	for (uint32_t i = k; i > 0; i--) {
-		while (nchoosek(x, i) > r) {
+		while (cmb.getCombination(x, i) > r) {
 			x--;
 		}
 		t[i] = x;
-		r = nchoosek(x+1, i)-r-1;
+		r = cmb.getCombination(x+1, i)-r-1;
 	}
 }
 
@@ -237,28 +242,28 @@ int main(int argc, char *argv[]) {
 	uint32_t k, l;
 
 	if (argc != 3) {
-		cerr << "Usage: ramsey k1 k2" << endl;
+		std::cerr << "Usage: ramsey k1 k2" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	try {
-		k = stoi(argv[1]);
-		l = stoi(argv[2]);
-	} catch (invalid_argument& e) {
-		cerr << "Usage: ramsey k1 k2" << endl;
+		k = std::stoi(argv[1]);
+		l = std::stoi(argv[2]);
+	} catch (std::invalid_argument& e) {
+		std::cerr << "Usage: ramsey k1 k2" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	// set the number of threads for checking if 
 	// a monochromatic clique is avoided
-	omp_set_num_threads(12);
+	// omp_set_num_threads(12);
 
-	cout << k << "  " << l << endl;
+	std::cout << k << "  " << l << std::endl;
 
 	int_vec_t red, blue;
 	red.push_back(1);
 	ColorSet cs (red, blue, k, l);
-	cout << "Result for starting from {1}, {}: " << cs.search(2) << endl; 
+	std::cout << "Result for starting from {1}, {}: " << cs.search(2) << std::endl; 
 	
 	return 0;
 }

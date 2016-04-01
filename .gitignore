@@ -2,3 +2,6 @@
 ramsey
 gmon.out
 *.txt
+*.bz2
+lib
+*.o

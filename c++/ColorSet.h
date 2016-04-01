@@ -6,13 +6,13 @@
 #include <vector>
 #include <unordered_set>
 #include <omp.h>
-
+#include "Combination.h"
+	
 #define MAX(a, b, c) ((a>b)?((a>c)?a:c):((b>c)?b:c))
 #define THRESHOLD 50
 
-using namespace std;
-typedef vector<uint32_t> int_vec_t;
-typedef unordered_set<uint32_t> int_set_t;
+typedef std::vector<uint32_t> int_vec_t;
+typedef std::unordered_set<uint32_t> int_set_t;
 //==============================================================
 
 class ColorSet {
@@ -35,10 +35,10 @@ inline bool avoids(const int_vec_t& color_set, const int_set_t& set, uint32_t si
 inline bool clique_exists_para(const int_vec_t& color_set, const int_set_t& set, const uint32_t *subset, uint32_t k);
 inline bool clique_exists_seq(const int_vec_t& color_set, const int_set_t& set, const uint32_t *subset, uint32_t k);
 inline uint32_t nchoosek(uint32_t n, uint32_t k);
-inline void unrank(uint32_t *t, uint32_t r, uint32_t n, uint32_t k);
+inline void unrank(uint32_t *t, bm::uint1024_t r, uint32_t n, uint32_t k);
 inline void successor(uint32_t *t, uint32_t n, uint32_t k);
 inline bool avoids_seq(uint32_t k, const int_vec_t& color_set, const int_set_t& set, uint32_t *subset, 
 						uint32_t start, uint32_t i);
-inline bool avoids_para(const int_vec_t& color_set, const int_set_t& set, uint32_t size, uint32_t n, uint32_t num_combs);
+inline bool avoids_para(const int_vec_t& color_set, const int_set_t& set, uint32_t size, uint32_t n, bm::uint1024_t num_combs);
 
 #endif

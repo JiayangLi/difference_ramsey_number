@@ -8,28 +8,30 @@
 #include <omp.h>
 #include "Combination.h"
 	
-#define MAX(a, b, c) ((a>b)?((a>c)?a:c):((b>c)?b:c))
+#define MAX(a, b) ((a>b)?a:b)
 #define THRESHOLD 50
 
 typedef std::vector<uint32_t> int_vec_t;
 typedef std::unordered_set<uint32_t> int_set_t;
+typedef std::vector<int_vec_t> vec_vec_t;
+typedef std::vector<int_set_t> set_vec_t;
 //==============================================================
 
 class ColorSet {
-private:
-	uint32_t k, l;
-	int_vec_t red, blue;
-	int_set_t red_set, blue_set;
+public:
+	int_vec_t clique_sizes;
+	vec_vec_t colors_vec;
+	set_vec_t colors_set;
 
 public:
-	ColorSet(int_vec_t& init_red, int_vec_t& init_blue, uint32_t k, uint32_t l);
+	ColorSet(int_vec_t& sizes, vec_vec_t& colors);
 	uint32_t search(uint32_t new_diff);
 	void pprint();
 };
 
 
 // helper utility functions 
-inline void init_set(const int_vec_t& v, int_set_t& s);
+inline void init_set(const vec_vec_t& v, set_vec_t& s);
 inline void print_color_set(const int_vec_t& color_set);
 inline bool avoids(const int_vec_t& color_set, const int_set_t& set, uint32_t size);
 inline bool clique_exists_para(const int_vec_t& color_set, const int_set_t& set, const uint32_t *subset, uint32_t k);

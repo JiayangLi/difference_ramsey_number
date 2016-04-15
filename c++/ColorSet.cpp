@@ -8,60 +8,56 @@
 
 Combination cmb;
 
-ColorSet::ColorSet(int_vec_t& init_red, int_vec_t& init_blue, uint32_t k, uint32_t l)
-	: k(k-1), l(l-1), red(move(init_red)), blue(move(init_blue)) {
-		init_set(red, red_set);
-		init_set(blue, blue_set);
+ColorSet::ColorSet(int_vec_t& sizes, vec_vec_t& colors)
+	: clique_sizes(move(sizes)), colors_vec(move(colors)) {
+		init_set(colors_vec, colors_set);
 	}
 
 uint32_t ColorSet::search(uint32_t new_diff) {
-	uint32_t p = 0, q = 0;
+	uint32_t result = new_diff;
 
-	//========== debugging print statements ==============
-	//std::cout << "Coloring " << new_diff << " red in: ";
-	//this->pprint();
-	//====================================================
+	int_vec_t::const_iterator k = clique_sizes.begin();
+	set_vec_t::iterator s = colors_set.begin();
+	for (vec_vec_t::iterator v = colors_vec.begin(); v != colors_vec.end(); v++) {
+		//========== debugging print statements ==============
+		//this->pprint();
+		//====================================================
 
-	// try coloring new_diff red
-	red.push_back(new_diff);
-	red_set.insert(new_diff);
-	if (avoids(red, red_set, k)) {
-		p = search(new_diff+1);
+		uint32_t t;
+
+		(*v).push_back(new_diff);
+		(*s).insert(new_diff);
+		if (avoids(*v, *s, *k)) {
+			t = search(new_diff+1);
+			result = MAX(result, t);
+		}
+		(*s).erase(new_diff);
+		(*v).pop_back();
+
+		k++;
+		s++;
 	}
-	red_set.erase(new_diff);
-	red.pop_back();
 
-	//========== debugging print statements ==============
-	//std::cout << "Coloring " << new_diff << " blue in: ";
-	//this->pprint();
-	//====================================================
-
-	// try coloring new_diff blue
-	blue.push_back(new_diff);
-	blue_set.insert(new_diff);
-	if (avoids(blue, blue_set, l)) {
-		q = search(new_diff+1);
-	}
-	blue_set.erase(new_diff);
-	blue.pop_back();
-
-	return MAX(p, q, new_diff);
+	return result;
 }
 
 void ColorSet::pprint() {
-	std::cout << "red: ";
-	print_color_set(red);
-	std::cout << ", blue: ";
-	print_color_set(blue);
+	for (vec_vec_t::const_iterator iter = colors_vec.begin(); iter != colors_vec.end(); iter++) {
+		print_color_set(*iter);
+		std::cout << "   ";
+	}
 	std::cout << std::endl;
 }
 
 
 // helper utility functions
-inline void init_set(const int_vec_t& v, int_set_t& s) {
-	for (int_vec_t::const_iterator iter = v.begin(); iter != v.end(); iter++) {
-		uint32_t n = *iter;
-		s.insert(n);
+inline void init_set(const vec_vec_t& v, set_vec_t& s) {
+	for (vec_vec_t::const_iterator i = v.begin(); i != v.end(); i++) {
+		int_set_t set;
+		for (int_vec_t::const_iterator j = (*i).begin(); j != (*i).end(); j++) {
+			set.insert(*j);
+		}
+		s.push_back(move(set));
 	}
 }
 
@@ -239,18 +235,24 @@ inline bool avoids_seq(uint32_t k, const int_vec_t& color_set, const int_set_t& 
 //==============================================================
 //====================== main function =========================
 int main(int argc, char *argv[]) {
-	uint32_t k, l;
+	// sizes of the cliques
+	int_vec_t clique_sizes;
 
-	if (argc != 3) {
-		std::cerr << "Usage: ramsey k1 k2" << std::endl;
+	// initial good graph
+	vec_vec_t initial_sets;
+
+	if (argc < 3) {
+		std::cerr << "Usage: ramsey [k]" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	try {
-		k = std::stoi(argv[1]);
-		l = std::stoi(argv[2]);
+		// initialize clique_sizes from arg
+		for (int i = 1; i < argc; i++) {
+			clique_sizes.push_back(std::stoi(argv[i])-1);
+		}
 	} catch (std::invalid_argument& e) {
-		std::cerr << "Usage: ramsey k1 k2" << std::endl;
+		std::cerr << "Usage: ramsey num_colors [k]" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -258,12 +260,20 @@ int main(int argc, char *argv[]) {
 	// a monochromatic clique is avoided
 	// omp_set_num_threads(12);
 
-	std::cout << k << "  " << l << std::endl;
+	std::cout << "clique sizes are: ";
+	for (int_vec_t::const_iterator iter = clique_sizes.begin(); iter != clique_sizes.end(); iter++) {
+		std::cout << *iter << " ";
+	}
+	std::cout << std::endl;
 
+	// initializing initial_sets
 	int_vec_t red, blue;
-	red.push_back(1);
-	ColorSet cs (red, blue, k, l);
-	std::cout << "Result for starting from {1}, {}: " << cs.search(2) << std::endl; 
-	
+	initial_sets.push_back(move(red));
+	initial_sets.push_back(move(blue));
+
+	ColorSet cs (clique_sizes, initial_sets);
+	std::cout << cs.search(1) << std::endl;
+
+
 	return 0;
 }
